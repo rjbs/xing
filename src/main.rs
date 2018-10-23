@@ -22,6 +22,9 @@ fn main() {
 
   let mut bytes = stdin.bytes();
 
+  let mut you_said  = "";
+  let mut they_said = "";
+
   loop {
     let str = format!("You are in Animal Town, in acre {}-{}.", x, y);
 
@@ -40,10 +43,35 @@ fn main() {
         stdout,
         "{}{}{}",
         termion::cursor::Goto(2, 4),
-        "Bob the Cat is here.",
+        "Bob the Cat is here.  Press 't' to talk to Bob.",
         termion::style::Reset,
       ).unwrap();
     }
+
+    if ! you_said.is_empty() && ! they_said.is_empty() {
+      write!(
+        stdout,
+        "{}{}You said:  {}{}{}",
+        termion::cursor::Goto(2, 6),
+        termion::style::Bold,
+        color::Fg(color::LightBlue),
+        &you_said,
+        termion::style::Reset,
+      ).unwrap();
+
+      write!(
+        stdout,
+        "{}{}They said: {}{}{}",
+        termion::cursor::Goto(2, 7),
+        termion::style::Bold,
+        color::Fg(color::LightMagenta),
+        &you_said,
+        termion::style::Reset,
+      ).unwrap();
+    }
+
+    you_said  = "";
+    they_said = "";
 
     write!(
       stdout,
@@ -67,6 +95,13 @@ fn main() {
 
       b'a' => { if x > min_coord { x = x - 1; } }
       b'd' => { if x < max_coord { x = x + 1; } }
+
+      b't' => {
+        if x == 2 && y == 0 {
+          you_said  = "Hi, Bob!";
+          they_said = "Mew.";
+        }
+      }
 
       _ => {}
     };
