@@ -1,16 +1,18 @@
-extern crate rustbox;
+extern crate termion;
 
 use std::error::Error;
 use std::default::Default;
 
-use rustbox::{Color, RustBox};
-use rustbox::Key;
+use termion::color;
+use termion::raw::IntoRawMode;
+use std::io::{Read, Write, stdout, stdin};
 
 fn main() {
-  let rustbox = match RustBox::init(Default::default()) {
-    Result::Ok(v)  => v,
-    Result::Err(e) => panic!("{}", e),
-  };
+  let stdout = stdout();
+  let mut stdout = stdout.lock().into_raw_mode().unwrap();
+  let stdin = stdin();
+  let stdin = stdin.lock();
+
 
   let min_coord = 0;
   let max_coord = 2;
@@ -18,43 +20,59 @@ fn main() {
   let mut x = 1;
   let mut y = 1;
 
+  let mut bytes = stdin.bytes();
+
   loop {
     let str = format!("You are in Animal Town, in acre {}-{}.", x, y);
-    rustbox.print(
-      1, 1,
-      rustbox::RB_BOLD, Color::White, Color::Black,
-      &str
-    );
+
+    write!(
+      stdout,
+      "{}{}{}{}{}",
+      termion::clear::All,
+      termion::cursor::Goto(2, 2),
+      termion::style::Bold,
+      &str,
+      termion::style::Reset,
+    ).unwrap();
 
     if x == 2 && y == 0 {
-      rustbox.print(
-        1, 3,
-        rustbox::RB_NORMAL, Color::White, Color::Black,
+      write!(
+        stdout,
+        "{}{}{}",
+        termion::cursor::Goto(2, 4),
         "Bob the Cat is here.",
-      );
+        termion::style::Reset,
+      ).unwrap();
     }
 
-    rustbox.print(1, 20, rustbox::RB_BOLD, Color::White, Color::Black,
-                  "Use 'wasd' to move.  Press 'q' to quit.");
+    write!(
+      stdout,
+      "{}{}{}{}",
+      termion::cursor::Goto(2, 21),
+      termion::style::Bold,
+      "Use 'wasd' to move.  Press 'q' to quit.",
+      termion::style::Reset,
+    ).unwrap();
 
-    rustbox.present();
-    match rustbox.poll_event(false) {
-      Ok(rustbox::Event::KeyEvent(key)) => {
-        match key {
-          Key::Char('q') => { break; }
+    stdout.flush().unwrap();
 
-          Key::Char('w') => { if y < max_coord { y = y + 1; } }
-          Key::Char('s') => { if y > min_coord { y = y - 1; } }
+    let b = bytes.next().unwrap().unwrap();
 
-          Key::Char('a') => { if x > min_coord { x = x - 1; } }
-          Key::Char('d') => { if x < max_coord { x = x + 1; } }
+    match b {
+      // Quit
+      b'q' => { break; },
 
-          _ => { }
-        }
-      },
-      Err(e) => panic!("{}", e.description()),
-        _ => { }
-    }
+      b'w' => { if y < max_coord { y = y + 1; } }
+      b's' => { if y > min_coord { y = y - 1; } }
+
+      b'a' => { if x > min_coord { x = x - 1; } }
+      b'd' => { if x < max_coord { x = x + 1; } }
+
+      _ => {}
+    };
+
+    stdout.flush().unwrap();
   }
+
 }
 
