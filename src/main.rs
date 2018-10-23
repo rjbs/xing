@@ -54,7 +54,7 @@ fn main() {
         "{}{}You said:  {}{}{}",
         termion::cursor::Goto(2, 6),
         termion::style::Bold,
-        color::Fg(color::LightBlue),
+        color::Fg(color::LightCyan),
         &you_said,
         termion::style::Reset,
       ).unwrap();
@@ -64,8 +64,8 @@ fn main() {
         "{}{}They said: {}{}{}",
         termion::cursor::Goto(2, 7),
         termion::style::Bold,
-        color::Fg(color::LightMagenta),
-        &you_said,
+        color::Fg(color::LightGreen),
+        &they_said,
         termion::style::Reset,
       ).unwrap();
     }
