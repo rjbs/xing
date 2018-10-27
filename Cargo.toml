@@ -5,3 +5,4 @@ authors = ["Ricardo Signes <rjbs@cpan.org>"]
 
 [dependencies]
 termion = "*"
+array-init = "*"

@@ -1,11 +1,29 @@
+extern crate array_init;
 extern crate termion;
-
-use std::error::Error;
-use std::default::Default;
 
 use termion::color;
 use termion::raw::IntoRawMode;
 use std::io::{Read, Write, stdout, stdin};
+
+const MAP_EDGE_SIZE: usize = 2;
+
+#[derive(Debug, Clone)]
+struct Animal {
+  name:     String,
+  you_say:  String,
+  they_say: String,
+}
+
+#[derive(Debug, Clone)]
+struct Acre {
+  animal: Option<Animal>,
+}
+
+impl Default for Acre {
+  fn default () -> Acre {
+    Acre { animal: None }
+  }
+}
 
 fn main() {
   let stdout = stdout();
@@ -13,17 +31,30 @@ fn main() {
   let stdin = stdin();
   let stdin = stdin.lock();
 
+  // let mut map = [[Acre::default(); MAP_EDGE_SIZE+1]; MAP_EDGE_SIZE+1];
+  let mut map : [ [Acre; MAP_EDGE_SIZE+1]; MAP_EDGE_SIZE+1 ] = array_init::array_init(
+    |_i| array_init::array_init(|_j| Acre::default())
+  );
 
-  let min_coord = 0;
-  let max_coord = 2;
+  map[2][0].animal = Some(Animal {
+    name:     "Bob".to_string(),
+    you_say:  "Hi, Bob!".to_string(),
+    they_say: "Mew.".to_string(),
+  });
+
+  map[0][1].animal = Some(Animal {
+    name:     "Lobo".to_string(),
+    you_say:  "Heya, Lobo!".to_string(),
+    they_say: "Woof!.".to_string(),
+  });
 
   let mut x = 1;
   let mut y = 1;
 
   let mut bytes = stdin.bytes();
 
-  let mut you_said  = "";
-  let mut they_said = "";
+  let mut you_said  = String::new();
+  let mut they_said = String::new();
 
   loop {
     let str = format!("You are in Animal Town, in acre {}-{}.", x, y);
@@ -38,12 +69,14 @@ fn main() {
       termion::style::Reset,
     ).unwrap();
 
-    if x == 2 && y == 0 {
+    if let Some(ref animal) = map[x][y].animal {
       write!(
         stdout,
-        "{}{}{}",
+        "{}{}{}{}.{}",
         termion::cursor::Goto(2, 4),
-        "Bob the Cat is here.  Press 't' to talk to Bob.",
+        animal.name,
+        " is here.  Press 't' to talk to ",
+        animal.name,
         termion::style::Reset,
       ).unwrap();
     }
@@ -70,8 +103,8 @@ fn main() {
       ).unwrap();
     }
 
-    you_said  = "";
-    they_said = "";
+    you_said  = String::new();
+    they_said = String::new();
 
     write!(
       stdout,
@@ -90,16 +123,18 @@ fn main() {
       // Quit
       b'q' => { break; },
 
-      b'w' => { if y < max_coord { y = y + 1; } }
-      b's' => { if y > min_coord { y = y - 1; } }
+      b'w' => { if y < MAP_EDGE_SIZE { y = y + 1; } }
+      b's' => { if y > 0             { y = y - 1; } }
 
-      b'a' => { if x > min_coord { x = x - 1; } }
-      b'd' => { if x < max_coord { x = x + 1; } }
+      b'a' => { if x > 0             { x = x - 1; } }
+      b'd' => { if x < MAP_EDGE_SIZE { x = x + 1; } }
 
       b't' => {
-        if x == 2 && y == 0 {
-          you_said  = "Hi, Bob!";
-          they_said = "Mew.";
+        if let Some(ref animal) = map[x][y].animal {
+          let a = &animal.you_say;
+          let b = &animal.they_say;
+          you_said  = a.clone();
+          they_said = b.clone();
         }
       }
 
@@ -110,4 +145,3 @@ fn main() {
   }
 
 }
-
